@@ -1,19 +1,18 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  = 3;        /* border pixel of windows */
-static const unsigned int gappx     = 5;        /* gaps between windows */
+static const unsigned int borderpx  = 0;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
 static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
+static const int topbar             = 0;        /* 0 means bottom bar */
 static const char *fonts[]          = { "JetBrains Mono:size=11", "JoyPixels:pixelsize=11:antialias=true:autohint=true"};
 static const char dmenufont[]       = "JetBrains Mono:size=11";
 static char normbgcolor[]           = "#222222";
-static char normbordercolor[]       = "#444444";
-static char normfgcolor[]           = "#bbbbbb";
+static char normbordercolor[]       = "#444444"; static char normfgcolor[]           = "#bbbbbb";
 static char selfgcolor[]            = "#eeeeee";
-static char selbordercolor[]        = "#005577";
+// static char selbordercolor[]        = "#005577";
+static char selbordercolor[]        = "#FF0000";
 static char selbgcolor[]            = "#005577";
 static char *colors[][3] = {
        /*               fg           bg           border   */
@@ -22,20 +21,23 @@ static char *colors[][3] = {
 };
 
 /* tagging */
-static const char *tags[] = { "", "", "", "", "", "", "", "", "" };
+static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class                instance  title           tags mask  isfloating  isterminal  noswallow  monitor */
-	{ "TelegramDesktop",    NULL,     NULL,           0,         1,          0,           0,        -1 },
-	{ "obs",                NULL,     NULL,           0,         1,          0,           0,        -1 },
-	{ "Lutris",             NULL,     NULL,           0,         1,          0,           0,        -1 },
-	{ "firefox",   		NULL,     NULL,           1 << 2,    0,          0,          -1,        -1 },
-	{ "St",                 NULL,     NULL,           0,         0,          1,           0,        -1 },
-	{ NULL,                 NULL,     "Event Tester", 0,         0,          0,           1,        -1 }, /* xev */
+	/* class                                  instance  title           tags mask  isfloating  isterminal  noswallow  monitor */
+	{ "obs",                                  NULL,     NULL,           0,         1,          0,           0,        -1 },
+	{ "Lutris",                               NULL,     NULL,           0,         1,          0,           0,        -1 },
+	{ "zenity",     	                  NULL,     NULL,           0,         1,          0,           0,        -1 },
+	{ "DBeaver",     	                  NULL,     NULL,           1 << 1,    0,          0,           0,        -1 },
+	{ "Brave-browser",	                  NULL,     NULL,           1 << 2,    0,          0,           0,        -1 },
+	{ "Zathura",     	                  NULL,     NULL,           1 << 3,    0,          0,           0,        -1 },
+	{ "discord",                              NULL,     NULL,           1 << 4,    0,          0,           0,        -1 },
+	{ "messenger-nativefier",                 NULL,     NULL,           1 << 5,    0,          0,           0,        -1 },
+	{ NULL,                                   NULL,     "Event Tester", 0,         0,          0,           1,        -1 }, /* xev */
 };
 
 /* layout(s) */
@@ -51,7 +53,8 @@ static const Layout layouts[] = {
 };
 
 /* key definitions */
-#define MODKEY Mod4Mask
+#define MODKEY Mod1Mask
+// #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
@@ -64,46 +67,52 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont};
-static const char *termcmd[]  = { "st", NULL };
+static const char *termcmd[]  = { "wezterm", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
-	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
-	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
-	{ MODKEY,                       XK_g,      togglebar,      {0} },
-	{ MODKEY,                       XK_f,	   zoom,           {0} },
-	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
-	{ MODKEY,                       XK_s,      incnmaster,     {.i = +1 } },
-	{ MODKEY,		        XK_q,      killclient,     {0} },
-	{ MODKEY,                       XK_w,      setlayout,      {.v = &layouts[0]} },
-	{ MODKEY,                       XK_e,      setlayout,      {.v = &layouts[1]} },
-	{ MODKEY,                       XK_r,      setlayout,      {.v = &layouts[2]} },
-	{ MODKEY|ShiftMask,             XK_r,  	   togglefloating, {0} },
-	{ MODKEY,                       XK_t,  	   setlayout,      {0} },
-	{ MODKEY,                       XK_space,  spawn,          {.v = dmenucmd } },
-	{ MODKEY,			XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
-	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
-	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
-	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
-	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
-	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
-	{ MODKEY,			XK_minus,  setgaps,	   {.i = -1 } },
-	{ MODKEY,			XK_equal,  setgaps,	   {.i = +1 } },
-	{ MODKEY|ShiftMask,		XK_equal,  setgaps,	   {.i =  0 } },
-	{ MODKEY,                       XK_F5,     xrdb,           {.v = NULL } },
-	TAGKEYS(                        XK_1,                      0)
-	TAGKEYS(                        XK_2,                      1)
-	TAGKEYS(                        XK_3,                      2)
-	TAGKEYS(                        XK_4,                      3)
-	TAGKEYS(                        XK_5,                      4)
-	TAGKEYS(                        XK_6,                      5)
+	{ Mod4Mask|ShiftMask,             XK_l,      setmfact,       {.f = +0.05} },
+	{ Mod4Mask,                       XK_l,      focusstack,     {.i = -1 } },
+	{ Mod4Mask,                       XK_h,      focusstack,     {.i = +1 } },
+	{ Mod4Mask|ShiftMask,             XK_h,      setmfact,       {.f = -0.05} },
+	{ Mod4Mask,                       XK_g,      togglebar,      {0} },
+	{ Mod1Mask,                       XK_Return, zoom,           {0} },
+	{ Mod4Mask,                       XK_k,      incnmaster,     {.i = -1 } },
+	{ Mod4Mask,                       XK_j,      incnmaster,     {.i = +1 } },
+	{ Mod4Mask,		          XK_q,      killclient,     {0} },
+	{ Mod4Mask,                       XK_w,      setlayout,      {.v = &layouts[0]} },
+	{ Mod4Mask,                       XK_e,      setlayout,      {.v = &layouts[1]} },
+	{ Mod4Mask,                       XK_u,      setlayout,      {.v = &layouts[2]} },
+	{ Mod4Mask|ShiftMask,             XK_f,      togglefloating, {0} },
+	// { Mod4Mask,                       XK_t,      setlayout,      {0} },
+	{ Mod4Mask,                       XK_p,      spawn,          {.v = dmenucmd } },
+	{ Mod4Mask|ShiftMask,		  XK_Return, spawn,          {.v = termcmd } },
+	{ Mod4Mask,                       XK_Tab,    view,           {0} },
+	{ Mod1Mask,                       XK_0,      view,           {.ui = ~0 } },
+	{ Mod1Mask|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
+	{ Mod4Mask,                       XK_comma,  focusmon,       {.i = -1 } },
+	{ Mod4Mask,                       XK_period, focusmon,       {.i = +1 } },
+	{ Mod4Mask|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
+	{ Mod4Mask|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
+	{ Mod4Mask,                       XK_F5,     xrdb,           {.v = NULL } },
+	TAGKEYS(                        XK_n,                      0)
+	TAGKEYS(                        XK_a,                      1)
+	TAGKEYS(                        XK_r,                      2)
+	TAGKEYS(                        XK_u,                      3)
+	TAGKEYS(                        XK_i,                      4)
+	TAGKEYS(                        XK_m,                      5)
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
+	TAGKEYS(                        XK_Thai_lakkhangyao,       0)
+	TAGKEYS(                        XK_slash,                  1)
+	TAGKEYS(                        XK_minus,                  2)
+	TAGKEYS(                        XK_Thai_phosamphao,        3)
+	TAGKEYS(                        XK_Thai_thothung,          4)
+	TAGKEYS(                        XK_Thai_sarau,             5)
+	TAGKEYS(                        XK_Thai_saraue,            6)
+	TAGKEYS(                        XK_Thai_khokhwai,          7)
+	TAGKEYS(                        XK_Thai_totao,             8)
 	{ MODKEY|ShiftMask,		XK_q,      quit,           {0} },
 };
 
