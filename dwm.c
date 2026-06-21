@@ -277,6 +277,7 @@ static const char broken[] = "broken";
 static char stext[256];
 static char statussig;
 static pid_t statuspid = -1;
+static int sbar_textw = 0;
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh, blw = 0;      /* bar geometry */
@@ -530,11 +531,11 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + blw)
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext)) {
+		else if (sbar_textw > 0 && ev->x > selmon->ww - sbar_textw) {
 			click = ClkStatusText;
 			char *s = stext;
 			char blk[256];
-			int bi, xo = (int)TEXTW(stext) - (selmon->ww - ev->x);
+			int bi, xo = sbar_textw - (selmon->ww - ev->x);
 			statussig = 0;
 			while (*s) {
 				bi = 0;
@@ -818,9 +819,16 @@ drawbar(Monitor *m)
 
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
+		char sdisp[sizeof(stext)];
+		unsigned int sdi = 0;
+		for (unsigned int si = 0; stext[si] && sdi < sizeof(sdisp)-1; si++)
+			if ((unsigned char)stext[si] >= ' ')
+				sdisp[sdi++] = stext[si];
+		sdisp[sdi] = '\0';
+		sbar_textw = TEXTW(sdisp);
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
+		tw = sbar_textw - lrpad + 2; /* 2px right padding */
+		drw_text(drw, m->ww - tw, 0, tw, bh, 0, sdisp, 0);
 	}
 
 	for (c = m->clients; c; c = c->next) {
