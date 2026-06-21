@@ -235,6 +235,7 @@ static void setup(void);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void sigchld(int unused);
+static void sigstatusbar(const Arg *arg);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
@@ -274,6 +275,8 @@ static pid_t winpid(Window w);
 /* variables */
 static const char broken[] = "broken";
 static char stext[256];
+static char statussig;
+static pid_t statuspid = -1;
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh, blw = 0;      /* bar geometry */
@@ -527,9 +530,29 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + blw)
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext))
+		else if (ev->x > selmon->ww - (int)TEXTW(stext)) {
 			click = ClkStatusText;
-		else
+			char *s = stext;
+			char blk[256];
+			int bi, xo = (int)TEXTW(stext) - (selmon->ww - ev->x);
+			statussig = 0;
+			while (*s) {
+				bi = 0;
+				int cursig = 0;
+				if ((unsigned char)*s < ' ')
+					cursig = (unsigned char)*s++;
+				while (*s && (unsigned char)*s >= ' ' && bi < 255)
+					blk[bi++] = *s++;
+				blk[bi] = '\0';
+				if (bi > 0) {
+					xo -= (int)drw_fontset_getwidth(drw, blk);
+					if (xo <= 0) {
+						statussig = cursig;
+						break;
+					}
+				}
+			}
+		} else
 			click = ClkWinTitle;
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
@@ -1771,6 +1794,26 @@ sigchld(int unused)
 	if (signal(SIGCHLD, sigchld) == SIG_ERR)
 		die("can't install SIGCHLD handler:");
 	while (0 < waitpid(-1, NULL, WNOHANG));
+}
+
+void
+sigstatusbar(const Arg *arg)
+{
+	union sigval sv;
+	if (!statussig)
+		return;
+	sv.sival_int = arg->i;
+	if (statuspid <= 0) {
+		char buf[16];
+		FILE *f = fopen("/tmp/dwmblocks.pid", "r");
+		if (!f)
+			return;
+		fgets(buf, sizeof(buf), f);
+		fclose(f);
+		statuspid = (pid_t)atoi(buf);
+	}
+	if (statuspid > 0)
+		sigqueue(statuspid, SIGRTMIN + statussig, sv);
 }
 
 void
