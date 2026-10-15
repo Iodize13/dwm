@@ -1216,6 +1216,12 @@ manage(Window w, XWindowAttributes *wa)
 	grabbuttons(c, 0);
 	if (!c->isfloating)
 		c->isfloating = c->oldstate = trans != None || c->isfixed;
+	/* center floating windows that didn't request a position (skip fullscreen-sized ones, e.g. flameshot) */
+	if (c->isfloating && wa->x == 0 && wa->y == 0
+	&& WIDTH(c) < c->mon->ww && HEIGHT(c) < c->mon->wh) {
+		c->x = c->mon->wx + (c->mon->ww - WIDTH(c)) / 2;
+		c->y = c->mon->wy + (c->mon->wh - HEIGHT(c)) / 2;
+	}
 	if (c->isfloating)
 		XRaiseWindow(dpy, c->win);
 	attach(c);
